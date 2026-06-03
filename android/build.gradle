@@ -1,0 +1,49 @@
+// android/build.gradle
+
+buildscript {
+    ext {
+        // Centralized version management
+        kotlin_version = '2.0.21'          // ✅ Update Kotlin (1.9.25 support is ending soon)
+        agp_version    = '8.6.1'
+        gms_version    = '4.4.2'           // ✅ Stable version; 4.4.3 sometimes causes sync issues
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        // Android Gradle Plugin
+        classpath "com.android.tools.build:gradle:$agp_version"
+
+        // Kotlin Gradle Plugin
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // Google Services plugin (for Firebase integration)
+        classpath "com.google.gms:google-services:$gms_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// ✅ Shared build directory for better organization
+rootProject.buildDir = "../build"
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+
+    // Ensure :app is evaluated before any dependent submodules
+    project.evaluationDependsOn(":app")
+}
+
+// ✅ Clean task
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

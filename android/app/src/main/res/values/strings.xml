@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">foodbridge</string>
+
+    <!-- ✅ Required for Google Sign-In (Web Client ID from google-services.json) -->
+    <string name="default_web_client_id">
+        897007121549-1tci8endurcnmmvsfr6m3mfdetsolgh0.apps.googleusercontent.com
+    </string>
+</resources>
