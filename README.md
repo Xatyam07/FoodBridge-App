@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Flutter
 
 A modern Flutter-based mobile application utilizing the latest mobile development technologies and tools for building responsive cross-platform applications.
@@ -105,8 +106,10 @@ flutter build ios --release
 ```
 
 ## 🙏 Acknowledgments
-- Built with [Rocket.new](https://rocket.new)
 - Powered by [Flutter](https://flutter.dev) & [Dart](https://dart.dev)
 - Styled with Material Design
 
-Built with ❤️ on Rocket.new
+Built with ❤️ By Satyam Mishra
+=======
+# FoodBridge-App
+>>>>>>> f2063926288502f05e17d9cf60d96696661c75fd
