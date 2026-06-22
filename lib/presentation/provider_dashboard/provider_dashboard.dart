@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/app_export.dart';
 import './widgets/dashboard_header_widget.dart';
@@ -137,6 +139,13 @@ class _ProviderDashboardState extends State<ProviderDashboard>
   @override
   void initState() {
     super.initState();
+    // Validate authentication state before dashboard access
+    if (FirebaseAuth.instance.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/login-screen');
+      });
+      return;
+    }
     _tabController = TabController(length: 4, vsync: this);
   }
 
@@ -552,6 +561,45 @@ class _ProviderDashboardState extends State<ProviderDashboard>
                   textAlign: TextAlign.center,
                 ),
               ],
+            ),
+          ),
+          SizedBox(height: 3.h),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(3.w),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              ),
+            ),
+            child: ListTile(
+              leading: Icon(
+                Icons.logout,
+                color: theme.colorScheme.error,
+                size: 24,
+              ),
+              title: Text(
+                'Logout',
+                style: TextStyle(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () async {
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  await GoogleSignIn().signOut();
+                } catch (e) {
+                  debugPrint("Sign out error: $e");
+                }
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login-screen',
+                    (route) => false,
+                  );
+                }
+              },
             ),
           ),
         ],

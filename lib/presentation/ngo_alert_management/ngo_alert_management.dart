@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:sizer/sizer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/app_export.dart';
 import '../../theme/app_theme.dart';
@@ -10,10 +12,6 @@ import './widgets/alert_card_widget.dart';
 import './widgets/donation_acceptance_bottom_sheet.dart';
 import './widgets/filter_chips_widget.dart';
 import './widgets/urgent_alerts_banner_widget.dart';
-import 'widgets/alert_card_widget.dart';
-import 'widgets/donation_acceptance_bottom_sheet.dart';
-import 'widgets/filter_chips_widget.dart';
-import 'widgets/urgent_alerts_banner_widget.dart';
 
 class NgoAlertManagement extends StatefulWidget {
   const NgoAlertManagement({super.key});
@@ -95,6 +93,13 @@ class _NgoAlertManagementState extends State<NgoAlertManagement>
   @override
   void initState() {
     super.initState();
+    // Validate authentication state before dashboard access
+    if (FirebaseAuth.instance.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/login-screen');
+      });
+      return;
+    }
     _tabController = TabController(length: 4, vsync: this);
   }
 
@@ -559,11 +564,21 @@ class _NgoAlertManagementState extends State<NgoAlertManagement>
             'Logout',
             style: TextStyle(color: theme.colorScheme.error),
           ),
-          onTap: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/login-screen',
-            (route) => false,
-          ),
+          onTap: () async {
+            try {
+              await FirebaseAuth.instance.signOut();
+              await GoogleSignIn().signOut();
+            } catch (e) {
+              debugPrint("Sign out error: $e");
+            }
+            if (context.mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login-screen',
+                (route) => false,
+              );
+            }
+          },
         ),
       ],
     );

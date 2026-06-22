@@ -1,7 +1,6 @@
-<<<<<<< HEAD
-# Flutter
+# FoodBridge
 
-A modern Flutter-based mobile application utilizing the latest mobile development technologies and tools for building responsive cross-platform applications.
+FoodBridge is a modern Flutter-based mobile application designed to connect food providers with NGOs and volunteers, utilizing real-time route optimization and AI-driven coordination to reduce food waste and support communities in need.
 
 ## 📋 Prerequisites
 
@@ -42,26 +41,6 @@ flutter_app/
 └── README.md           # Project documentation
 ```
 
-## 🧩 Adding Routes
-
-To add new routes to the application, update the `lib/routes/app_routes.dart` file:
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:package_name/presentation/home_screen/home_screen.dart';
-
-class AppRoutes {
-  static const String initial = '/';
-  static const String home = '/home';
-
-  static Map<String, WidgetBuilder> routes = {
-    initial: (context) => const SplashScreen(),
-    home: (context) => const HomeScreen(),
-    // Add more routes as needed
-  }
-}
-```
-
 ## 🎨 Theming
 
 This project includes a comprehensive theming system with both light and dark themes:
@@ -93,6 +72,7 @@ Container(
   child: Text('Responsive Container'),
 )
 ```
+
 ## 📦 Deployment
 
 Build the application for production:
@@ -109,7 +89,4 @@ flutter build ios --release
 - Powered by [Flutter](https://flutter.dev) & [Dart](https://dart.dev)
 - Styled with Material Design
 
-Built with ❤️ By Satyam Mishra
-=======
-# FoodBridge-App
->>>>>>> f2063926288502f05e17d9cf60d96696661c75fd
+Built with ❤️ by Satyam Mishra

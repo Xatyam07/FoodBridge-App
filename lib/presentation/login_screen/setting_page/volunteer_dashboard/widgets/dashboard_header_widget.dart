@@ -10,7 +10,7 @@ class DashboardHeaderWidget extends StatelessWidget {
     Key? key,
     required this.userName,
     this.onProfileTap,
-    this.onNotificationTap, required String providerName, required String businessType, required int notificationCount,
+    this.onNotificationTap,
   }) : super(key: key);
 
   @override

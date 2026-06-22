@@ -11,8 +11,10 @@ import '../widgets/custom_error_widget.dart';
 import '../presentation/login_screen/login_screen.dart';
 import '../presentation/user_registration/user_registration.dart';
 import '../presentation/provider_dashboard/provider_dashboard.dart';
-import '../presentation/ngo_dashboard/ngo_dashboard.dart';
 import '../presentation/login_screen/setting_page/volunteer_dashboard/volunteer_dashboard.dart';
+import '../presentation/ngo_alert_management/ngo_alert_management.dart';
+import '../presentation/food_upload_screen/food_upload_screen.dart';
+import '../presentation/volunteer_route_navigation/volunteer_route_navigation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,9 +64,11 @@ class MyApp extends StatelessWidget {
             '/login-screen': (context) => const LoginScreen(),
             '/user-registration': (context) => const UserRegistration(),
             '/provider-dashboard': (context) => const ProviderDashboard(),
-            '/ngo-dashboard': (context) => const NgoDashboard(),
+            '/ngo-dashboard': (context) => const NgoAlertManagement(),
             '/volunteer-dashboard': (context) => const VolunteerDashboard(),
             '/welcome': (context) => const WelcomeScreen(),
+            '/food-upload-screen': (context) => const FoodUploadScreen(),
+            '/volunteer-route-navigation': (context) => const VolunteerRouteNavigation(),
           },
 
           builder: (context, child) {

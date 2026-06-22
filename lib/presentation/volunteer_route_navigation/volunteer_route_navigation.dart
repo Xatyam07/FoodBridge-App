@@ -377,7 +377,7 @@ class _VolunteerRouteNavigationState extends State<VolunteerRouteNavigation>
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/login-screen');
+              Navigator.pushReplacementNamed(context, '/volunteer-dashboard');
             },
             child: const Text('Dashboard'),
           ),

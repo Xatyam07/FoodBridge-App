@@ -70,7 +70,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '897007121549',
     projectId: 'foodbridge-e84e0',
     storageBucket: 'foodbridge-e84e0.firebasestorage.app',
-    androidClientId: '897007121549-4mm4sr2dad8g636ha1bf3r62b4m4ipfe.apps.googleusercontent.com',
+    androidClientId: '897007121549-oj0uufhid0ggcl9usgm6vqj0a7oeobae.apps.googleusercontent.com',
     iosClientId: '897007121549-g2t12vflr1reo86m65sb9b3f3665kq5c.apps.googleusercontent.com',
     iosBundleId: 'com.foodbridge.app.testProject',
   );

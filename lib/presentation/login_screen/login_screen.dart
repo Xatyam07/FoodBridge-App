@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sizer/sizer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/app_export.dart';
-import '../../theme/app_theme.dart';
 import '../../../widgets/custom_icon_widget.dart';
 import './widgets/login_form_widget.dart';
 import './widgets/social_login_widget.dart';
@@ -26,11 +27,20 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<Offset> _slideAnimation;
   bool _isLoading = false;
 
-  /// ✅ Correct Google Sign-In WITH Android clientId
+  /// ✅ Google Sign-In Client IDs via environment variables (with fallbacks)
+  static const String _webClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '897007121549-1tci8endurcnmmvsfr6m3mfdetsolgh0.apps.googleusercontent.com',
+  );
+
+  static const String _androidClientId = String.fromEnvironment(
+    'GOOGLE_ANDROID_CLIENT_ID',
+    defaultValue: '897007121549-oj0uufhid0ggcl9usgm6vqj0a7oeobae.apps.googleusercontent.com',
+  );
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
-    clientId:
-    '897007121549-oj0uufhid0ggcl9usgm6vqj0a7oeobae.apps.googleusercontent.com',
+    clientId: kIsWeb ? _webClientId : _androidClientId,
   );
 
   @override
@@ -50,6 +60,39 @@ class _LoginScreenState extends State<LoginScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+
+    // Check if user is already signed in for session persistence redirect
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkExistingAuth());
+  }
+
+  Future<void> _checkExistingAuth() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() => _isLoading = true);
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        String role = 'provider';
+        if (userDoc.exists && userDoc.data() != null) {
+          role = userDoc.data()?['role'] ?? 'provider';
+        }
+
+        if (role == 'ngo') {
+          Navigator.pushReplacementNamed(context, '/ngo-dashboard');
+        } else if (role == 'volunteer') {
+          Navigator.pushReplacementNamed(context, '/volunteer-dashboard');
+        } else {
+          Navigator.pushReplacementNamed(context, '/provider-dashboard');
+        }
+      } catch (e, stackTrace) {
+        setState(() => _isLoading = false);
+        debugPrint("Error checking existing auth: $e");
+        debugPrint("Stack trace: $stackTrace");
+      }
+    }
   }
 
   @override
@@ -65,8 +108,25 @@ class _LoginScreenState extends State<LoginScreen>
       final credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email.trim(), password: password);
 
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(credential.user!.uid)
+          .get();
+
+      String role = 'provider';
+      if (userDoc.exists && userDoc.data() != null) {
+        role = userDoc.data()?['role'] ?? 'provider';
+      }
+
       Fluttertoast.showToast(msg: "Welcome ${credential.user!.email}");
-      Navigator.pushReplacementNamed(context, '/provider-dashboard');
+
+      if (role == 'ngo') {
+        Navigator.pushReplacementNamed(context, '/ngo-dashboard');
+      } else if (role == 'volunteer') {
+        Navigator.pushReplacementNamed(context, '/volunteer-dashboard');
+      } else {
+        Navigator.pushReplacementNamed(context, '/provider-dashboard');
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
       Fluttertoast.showToast(msg: e.message ?? 'Login failed');
@@ -78,29 +138,72 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      // ✅ Clear any old sessions
-      await _googleSignIn.signOut();
+      UserCredential userCredential;
 
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return;
+      if (kIsWeb) {
+        // Web: Use Firebase's signInWithPopup to bypass client-side origin mismatch issues
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.setCustomParameters({
+          'prompt': 'select_account',
+        });
+        userCredential = await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      } else {
+        // Mobile: Standard flow using google_sign_in package
+        await _googleSignIn.signOut();
+        final googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       }
 
-      final googleAuth = await googleUser.authentication;
+      final user = userCredential.user;
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+        String role = 'provider';
+        if (userDoc.exists && userDoc.data() != null) {
+          role = userDoc.data()?['role'] ?? 'provider';
+        } else {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'fullName': user.displayName ?? 'Google User',
+            'email': user.email ?? '',
+            'phone': user.phoneNumber ?? '',
+            'role': 'provider',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
 
-      Fluttertoast.showToast(msg: "Google login successful!");
-      Navigator.pushReplacementNamed(context, '/provider-dashboard');
-    } catch (e) {
+        Fluttertoast.showToast(msg: "Google login successful!");
+        if (role == 'ngo') {
+          Navigator.pushReplacementNamed(context, '/ngo-dashboard');
+        } else if (role == 'volunteer') {
+          Navigator.pushReplacementNamed(context, '/volunteer-dashboard');
+        } else {
+          Navigator.pushReplacementNamed(context, '/provider-dashboard');
+        }
+      }
+    } catch (e, stackTrace) {
       setState(() => _isLoading = false);
-      Fluttertoast.showToast(msg: "Google login failed: $e");
+      debugPrint("Google login error: $e");
+      debugPrint("Stack trace: $stackTrace");
+      Fluttertoast.showToast(
+        msg: "Google login failed. Please try again.",
+        toastLength: Toast.LENGTH_LONG,
+      );
     }
   }
 
